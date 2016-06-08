@@ -21,6 +21,11 @@
             <artifactId>gaea-common</artifactId>
             <version>${gaea.common.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.gaea</groupId>
+            <artifactId>gaea-common-db</artifactId>
+            <version>${gaea.common.version}</version>
+        </dependency>
         <!--Spring相关-->
         <dependency>
             <groupId>org.springframework</groupId>

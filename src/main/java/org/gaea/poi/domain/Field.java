@@ -1,9 +1,10 @@
 package org.gaea.poi.domain;
 
 /**
- * Created by iverson on 2016-6-4 16:20:57.
+ * XML定义的字段
+ * Created by iverson on 2016-6-7 09:55:59.
  */
-public class GaeaPoiFieldDefine {
+public class Field {
     private String name;
 
     public String getName() {

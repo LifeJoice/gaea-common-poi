@@ -4,10 +4,18 @@ import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.domain.GaeaPoiResultGroup;
 
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by iverson on 2016-6-3 17:58:06
  */
 public interface ExcelReader {
-    <T> GaeaPoiResultGroup<T> getData(InputStream fileIS, Class<T> beanClass) throws ValidationFailedException;
+    org.gaea.poi.domain.Workbook getWorkbook(InputStream fileIS) throws ValidationFailedException;
+
+    List<Map<String, String>> getData(InputStream fileIS) throws ValidationFailedException;
+
+    <T> List<T> getData(InputStream fileIS, Class<T> beanClass) throws ValidationFailedException;
+
+    <T> GaeaPoiResultGroup<T> getDataTest(InputStream fileIS, Class<T> beanClass) throws ValidationFailedException;
 }

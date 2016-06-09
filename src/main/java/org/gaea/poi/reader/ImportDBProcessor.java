@@ -5,6 +5,7 @@ import org.gaea.db.ibatis.jdbc.SQL;
 import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.domain.Block;
 import org.gaea.poi.domain.ExcelField;
+import org.gaea.poi.domain.Field;
 import org.gaea.poi.domain.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +59,8 @@ public class ImportDBProcessor {
         String tableName = block.getTable();
         StringBuilder columns = new StringBuilder();// 插入SQL的列。例如：id,name,address
         StringBuilder values = new StringBuilder();// 插入SQL的值(占位符).例如: :id,:name,:address
-        // 遍历Excel定义的字段，拼凑插入列和对应的占位符遍历
-        for(ExcelField field:block.getFieldDefines()){
+        // 遍历XML定义的字段（和Excel定义应该已经合并过了），拼凑插入列和对应的占位符遍历
+        for(Field field:block.getFieldMap().values()){
             columns.append(field.getName()).append(",");
             String key = field.getName();
             String paramName = ":"+key;// PreparedStatement和spring的SQL占位符

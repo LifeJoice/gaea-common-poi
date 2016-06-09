@@ -1,6 +1,8 @@
 package org.gaea.poi.domain;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 块。对应的是excel中的一个数据区块。一般一个块对应数据库一张数据表。
@@ -22,6 +24,7 @@ public class Block<T> {
     private String entityClass;// 数据对应的bean全名。例如：com.abc.domain.UserEntity
     private ExcelSheet sheetDefine;
     private List<ExcelField> fieldDefines;
+    private Map<String,Field> fieldMap = new LinkedHashMap<String, Field>();// key ： XML定义的name（或Excel定义的name）
     private List<T> data;
 
     public String getId() {
@@ -62,6 +65,14 @@ public class Block<T> {
 
     public void setFieldDefines(List<ExcelField> fieldDefines) {
         this.fieldDefines = fieldDefines;
+    }
+
+    public Map<String, Field> getFieldMap() {
+        return fieldMap;
+    }
+
+    public void setFieldMap(Map<String, Field> fieldMap) {
+        this.fieldMap = fieldMap;
     }
 
     public List<T> getData() {

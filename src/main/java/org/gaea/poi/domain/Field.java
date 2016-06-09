@@ -6,6 +6,11 @@ package org.gaea.poi.domain;
  */
 public class Field {
     private String name;
+    private Integer columnIndex;
+    private String readType;// 字段类型 : string(default) | date | time | datetime
+    public static final String READ_TYPE_DATE = "date";
+    public static final String READ_TYPE_TIME = "time";
+    public static final String READ_TYPE_DATETIME = "datetime";
 
     public String getName() {
         return name;
@@ -13,5 +18,21 @@ public class Field {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Integer getColumnIndex() {
+        return columnIndex;
+    }
+
+    public void setColumnIndex(Integer columnIndex) {
+        this.columnIndex = columnIndex;
+    }
+
+    public String getReadType() {
+        return readType;
+    }
+
+    public void setReadType(String readType) {
+        this.readType = readType;
     }
 }

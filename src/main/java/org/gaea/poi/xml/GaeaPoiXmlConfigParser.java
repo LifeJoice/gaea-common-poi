@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gaea.exception.InvalidDataException;
 import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.domain.Block;
+import org.gaea.poi.domain.Field;
 import org.gaea.poi.domain.Workbook;
 import org.gaea.util.GaeaPropertiesReader;
 import org.gaea.util.GaeaXmlUtils;
@@ -97,7 +98,7 @@ public class GaeaPoiXmlConfigParser {
                 if (!(workbookNode instanceof Element)) {
                     continue;
                 }
-                if (GaeaPoiXmlSchemaDefinition.POI_WORKBOOK_NODE_NAME.equals(workbookNode.getNodeName())) {
+                if (GaeaPoiXmlSchemaDefinition.POI_WORKBOOK_NODE_NAME.equalsIgnoreCase(workbookNode.getNodeName())) {
                     Workbook workbook = parseWorkbook(workbookNode);
                     if (workbook == null || StringUtils.isEmpty(workbook.getId())) {
                         logger.warn("格式不正确。对应的DataSet为空或缺失id！" + workbookNode.toString());
@@ -143,9 +144,8 @@ public class GaeaPoiXmlConfigParser {
      * @return
      * @throws InvalidDataException
      */
-    private Workbook parseWorkbook(Node workbookNode) throws InvalidDataException {
+    private Workbook parseWorkbook(Node workbookNode) throws InvalidDataException, ValidationFailedException {
         Workbook workbook = new Workbook();
-//        GaeaDataSource dataSource = new GaeaDataSource();
         Element workbookElement = (Element) workbookNode;
         NodeList nodes = workbookElement.getChildNodes();
         // 先自动填充<dataset>的属性
@@ -161,27 +161,83 @@ public class GaeaPoiXmlConfigParser {
             if (!(blockNode instanceof Element)) {
                 continue;
             }
-            if (GaeaPoiXmlSchemaDefinition.POI_WORKBOOK_BLOCK_NODE_NAME.equals(blockNode.getNodeName())) {
-                Block block = new Block();
-                try {
-                    block = GaeaXmlUtils.copyAttributesToBean(blockNode, block, Block.class);
-                } catch (Exception e) {
-                    String errorMsg = "自动转换XML元素<block>的属性错误！";
-                    throw new InvalidDataException(errorMsg, e);
+            if (GaeaPoiXmlSchemaDefinition.POI_WORKBOOK_BLOCK_NODE_NAME.equalsIgnoreCase(blockNode.getNodeName())) {
+                Block block = parseBlock(blockNode);
+//                Block block = new Block();
+//                try {
+//                    block = GaeaXmlUtils.copyAttributesToBean(blockNode, block, Block.class);
+//                } catch (Exception e) {
+//                    String errorMsg = "自动转换XML元素<block>的属性错误！";
+//                    throw new InvalidDataException(errorMsg, e);
+//                }
+                if (block != null) {
+                    if (workbook.getBlockList() == null) {
+                        workbook.setBlockList(new ArrayList<Block>());
+                    }
+                    workbook.getBlockList().add(block);
                 }
-                if (workbook.getBlockList() == null) {
-                    workbook.setBlockList(new ArrayList<Block>());
-                }
-                workbook.getBlockList().add(block);
-                // <data-source>的解析
-//                Element dsElement = (Element) n;
-//                String dsCode = dsElement.getAttribute(GaeaPoiXmlSchemaDefinition.DS_DATASET_DATASOURCE_CODE_NODE_NAME);
-//                dataSource.setCode(dsCode);
             } else {
                 logger.warn("Gaea Poi配置Xml schema中包含错误定义。包含不可识别信息: <" + blockNode.getNodeName() + ">");
             }
         }
         return workbook;
+    }
+
+    /**
+     * 转换XML <block>的属性和所有的子<field>至bean对象.
+     * @param blockNode
+     * @return
+     * @throws InvalidDataException
+     */
+    private Block parseBlock(Node blockNode) throws InvalidDataException, ValidationFailedException {
+        Block block = new Block();
+        Element blockElement = (Element) blockNode;
+        NodeList fieldNodes = blockElement.getChildNodes();
+        try {
+            block = GaeaXmlUtils.copyAttributesToBean(blockNode, block, Block.class);
+        } catch (Exception e) {
+            String errorMsg = "自动转换XML元素<block>的属性错误！";
+            throw new InvalidDataException(errorMsg, e);
+        }
+        for (int i = 0; i < fieldNodes.getLength(); i++) {
+            Node fieldNode = fieldNodes.item(i);
+            // xml解析会把各种换行符等解析成元素。统统跳过。
+            if (!(fieldNode instanceof Element)) {
+                continue;
+            }
+            if (GaeaPoiXmlSchemaDefinition.POI_WORKBOOK_FIELD_NODE_NAME.equalsIgnoreCase(fieldNode.getNodeName())) {
+                Field field = parseField(fieldNode);
+                if(StringUtils.isEmpty(field.getName())){
+                    throw new ValidationFailedException("XML定义的<field>的name属性不允许为空！");
+                }
+                if (field != null) {
+//                    if (block.getFieldList() == null) {
+//                        block.setFieldList(new ArrayList<Field>());
+//                    }
+                    block.getFieldMap().put(field.getName(),field);
+                }
+            } else {
+                logger.warn("Gaea Poi配置Xml schema中包含错误定义。包含不可识别信息: <" + fieldNode.getNodeName() + ">");
+            }
+        }
+        return block;
+    }
+
+    /**
+     * 转换XML <field>的属性至bean对象.
+     * @param fieldNode
+     * @return
+     * @throws InvalidDataException
+     */
+    private Field parseField(Node fieldNode) throws InvalidDataException {
+        Field field = new Field();
+        try {
+            field = GaeaXmlUtils.copyAttributesToBean(fieldNode, field, Field.class);
+        } catch (Exception e) {
+            String errorMsg = "自动转换XML元素<field>的属性错误！";
+            throw new InvalidDataException(errorMsg, e);
+        }
+        return field;
     }
 
     /**
@@ -200,7 +256,7 @@ public class GaeaPoiXmlConfigParser {
             if (!(node instanceof Element)) {
                 continue;
             }
-            if (GaeaPoiXmlSchemaDefinition.POI_ROOT_NODE.equals(node.getNodeName())) {
+            if (GaeaPoiXmlSchemaDefinition.POI_ROOT_NODE.equalsIgnoreCase(node.getNodeName())) {
                 rootNode = node;
                 break;
             }

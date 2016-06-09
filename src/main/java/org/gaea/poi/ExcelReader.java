@@ -1,7 +1,6 @@
 package org.gaea.poi;
 
 import org.gaea.exception.ValidationFailedException;
-import org.gaea.poi.domain.GaeaPoiResultGroup;
 
 import java.io.InputStream;
 import java.util.List;
@@ -16,6 +15,4 @@ public interface ExcelReader {
     List<Map<String, String>> getData(InputStream fileIS) throws ValidationFailedException;
 
     <T> List<T> getData(InputStream fileIS, Class<T> beanClass) throws ValidationFailedException;
-
-    <T> GaeaPoiResultGroup<T> getDataTest(InputStream fileIS, Class<T> beanClass) throws ValidationFailedException;
 }

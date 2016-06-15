@@ -148,11 +148,8 @@ public class ExcelReaderImpl implements ExcelReader {
     }
 
     public <T> List<T> getData(InputStream fileIS, Class<T> beanClass) throws ValidationFailedException {
-        T bean = BeanUtils.instantiate(beanClass);
-        BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
-        wrapper.setAutoGrowNestedPaths(true);
-        Map<String, String> excelRowValue = new HashMap<String, String>();
-        Map<Integer, ExcelField> columnDefMap = new HashMap<Integer, ExcelField>();
+//        Map<String, String> excelRowValue = new HashMap<String, String>();
+//        Map<Integer, ExcelField> columnDefMap = new HashMap<Integer, ExcelField>();
         List<T> results = new ArrayList<T>();
         try {
             //根据上述创建的输入流 创建工作簿对象ZA
@@ -162,12 +159,15 @@ public class ExcelReaderImpl implements ExcelReader {
             Sheet sheet = wb.getSheetAt(0);
             List<Map<String, String>> dataList = getData(sheet);
             for (int i = 0; dataList != null && i < dataList.size(); i++) {
+                T bean = BeanUtils.instantiate(beanClass);
+                BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
+                wrapper.setAutoGrowNestedPaths(true);
                 Map<String, String> dataMap = dataList.get(i);
                 wrapper.setPropertyValues(dataMap);
                 results.add(bean);
             }
             //关闭输入流
-            fileIS.close();
+//            fileIS.close();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InvalidFormatException e) {

@@ -4,9 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gaea.db.ibatis.jdbc.SQL;
 import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.domain.Block;
-import org.gaea.poi.domain.ExcelField;
 import org.gaea.poi.domain.Field;
-import org.gaea.poi.domain.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +15,6 @@ import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,10 +50,10 @@ public class ImportDBProcessor {
         if(block==null || block.getData()==null){
             throw new ValidationFailedException("Excel文档数据（block）为空，无法执行导入！");
         }
-        if(StringUtils.isEmpty(block.getTable())){
+        if(StringUtils.isEmpty(block.getDbTable())){
             throw new ValidationFailedException("Excel通用导入配置不完整，无法执行导入！缺失关键配置项block table.");
         }
-        String tableName = block.getTable();
+        String tableName = block.getDbTable();
         StringBuilder columns = new StringBuilder();// 插入SQL的列。例如：id,name,address
         StringBuilder values = new StringBuilder();// 插入SQL的值(占位符).例如: :id,:name,:address
         // 遍历XML定义的字段（和Excel定义应该已经合并过了），拼凑插入列和对应的占位符遍历

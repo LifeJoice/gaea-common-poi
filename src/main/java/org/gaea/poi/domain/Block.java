@@ -1,5 +1,6 @@
 package org.gaea.poi.domain;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,17 +16,18 @@ import java.util.Map;
  * 例如：导入产品数据，同时还有对应的库存。一行数据就包含了产品信息、库存信息两个表。
  * <p/>
  * 结果集可以嵌套。一般来说，嵌套了的话，就可以无视 sheetDefine, fieldDefines几个字段。</p>
- *
+ * <p>实现Serializable是为了可以缓存对象。</p>
  * Created by iverson on 2016-6-6 16:33:59.
  */
-public class Block<T> {
+public class Block<T> implements Serializable{
     private String id;
-    private String table;// 块对应的数据表
+    private String dbTable;// 块对应的数据表
     private String entityClass;// 数据对应的bean全名。例如：com.abc.domain.UserEntity
     private ExcelSheet sheetDefine;
     private List<ExcelField> fieldDefines;
-    private Map<String,Field> fieldMap = new LinkedHashMap<String, Field>();// key ： XML定义的name（或Excel定义的name）
+    private Map<String,Field> fieldMap = new LinkedHashMap<String, Field>();// Field其实是有序的。因为一个excel里面的column定义是有序的。key ： XML定义的name（或Excel定义的name）
     private List<T> data;
+    private String dataSetId; // 对应的数据集。导出用。
 
     public String getId() {
         return id;
@@ -35,12 +37,12 @@ public class Block<T> {
         this.id = id;
     }
 
-    public String getTable() {
-        return table;
+    public String getDbTable() {
+        return dbTable;
     }
 
-    public void setTable(String table) {
-        this.table = table;
+    public void setDbTable(String dbTable) {
+        this.dbTable = dbTable;
     }
 
     public String getEntityClass() {
@@ -81,5 +83,13 @@ public class Block<T> {
 
     public void setData(List<T> data) {
         this.data = data;
+    }
+
+    public String getDataSetId() {
+        return dataSetId;
+    }
+
+    public void setDataSetId(String dataSetId) {
+        this.dataSetId = dataSetId;
     }
 }

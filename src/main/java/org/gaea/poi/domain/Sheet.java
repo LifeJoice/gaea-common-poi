@@ -4,11 +4,12 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Created by iverson on 2016-6-4 16:21:39.
+ * 实现Serializable是为了可以缓存对象。
+ * Created by iverson on 2016-11-2 19:48:40.
  */
-public class ExcelSheet implements Serializable{
+public class Sheet implements Serializable{
     private String id;// excel定义的id，对应的是XML配置的<workbook>的id
-    private List<ExcelBlock> blockList;
+    private List<Block> blockList;
 
     public String getId() {
         return id;
@@ -18,11 +19,11 @@ public class ExcelSheet implements Serializable{
         this.id = id;
     }
 
-    public List<ExcelBlock> getBlockList() {
+    public List<Block> getBlockList() {
         return blockList;
     }
 
-    public void setBlockList(List<ExcelBlock> blockList) {
+    public void setBlockList(List<Block> blockList) {
         this.blockList = blockList;
     }
 }

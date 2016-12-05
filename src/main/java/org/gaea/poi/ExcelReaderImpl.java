@@ -1,10 +1,12 @@
 package org.gaea.poi;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.config.GaeaPoiDefinition;
@@ -12,7 +14,6 @@ import org.gaea.poi.domain.*;
 import org.gaea.poi.util.ExpressParser;
 import org.gaea.poi.xml.GaeaPoiXmlConfigParser;
 import org.gaea.util.GaeaPropertiesReader;
-import org.omg.CORBA.PRIVATE_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -76,8 +77,9 @@ public class ExcelReaderImpl implements ExcelReader {
                                 org.gaea.util.BeanUtils.copyProperties(xmlWorkbook, result);
                             }
                             // 获取块并设置块。
-                            if (excelSheet.getBlock() != null) {
-                                block = blockParse(result, excelSheet.getBlock());
+                            if (CollectionUtils.isNotEmpty(excelSheet.getBlockList())) {
+                                // 目前只支持一个sheet
+                                block = blockParse(result, excelSheet.getBlockList().get(0));
                             }
                         }
                         // 块不为空，数据才能关联到块。块关联到表！
@@ -219,12 +221,12 @@ public class ExcelReaderImpl implements ExcelReader {
                 }
                 // 存在Gaea导入定义的列，才取值放入对象中
                 if (columnDefMap.get(cell.getColumnIndex()) != null) {
-                    String readType = "";
+                    String dataType = "";
                     if(columnIndexDefMap!=null){
-                        readType = columnIndexDefMap.get(cell.getColumnIndex()).getReadType();
+                        dataType = columnIndexDefMap.get(cell.getColumnIndex()).getDataType();
                     }
                     // 获取Excel单元格的值。统一String类型。
-                    String value = getCellStringValue(cell,readType);
+                    String value = getCellStringValue(cell,dataType);
                     String key = columnDefMap.get(cell.getColumnIndex()).getName();
                     rowValueMap.put(key, value);
                 }
@@ -378,10 +380,10 @@ public class ExcelReaderImpl implements ExcelReader {
      * 因为POI的接口没有统一返回cell中的值的。
      *
      * @param cell
-     * @param readType XML定义的读取类型。为空则按Excel单元格类型转换。
+     * @param dataType XML定义的读取类型。为空则按Excel单元格类型转换。
      * @return
      */
-    private String getCellStringValue(Cell cell,String readType) {
+    private String getCellStringValue(Cell cell,String dataType) {
         String value = "";
         if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
             value = cell.getStringCellValue();
@@ -390,11 +392,11 @@ public class ExcelReaderImpl implements ExcelReader {
             if (HSSFDateUtil.isCellDateFormatted(cell)) {
                 value = cell.getDateCellValue().toString();
                 // 如果XML配置了对应的日期类型，则按XML配置转换；否则按系统配置的默认年月日时分秒转换。
-                if(Field.READ_TYPE_DATE.equalsIgnoreCase(readType)){
+                if(Field.DATA_TYPE_DATE.equalsIgnoreCase(dataType)){
                     value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT));
-                }else if(Field.READ_TYPE_TIME.equalsIgnoreCase(readType)){
+                }else if(Field.DATA_TYPE_TIME.equalsIgnoreCase(dataType)){
                     value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_TIME_FORMAT));
-                }else if(Field.READ_TYPE_DATETIME.equalsIgnoreCase(readType)){
+                }else if(Field.DATA_TYPE_DATETIME.equalsIgnoreCase(dataType)){
                     value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));
                 }else{
                     value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));

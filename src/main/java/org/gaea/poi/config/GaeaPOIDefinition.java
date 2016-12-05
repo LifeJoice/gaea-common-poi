@@ -11,4 +11,6 @@ public interface GaeaPoiDefinition {
     public static final String DEFINE_END = "gaea.poi.template.define.end";
     public static final String FIELD_DEFINE_BEGIN = "gaea.poi.template.field.define.begin";
     public static final String FIELD_DEFINE_END = "gaea.poi.template.field.define.end";
+    // REDIS
+    public static final String REDIS_EXCEL_EXPORT_TEMPLATE = "gaea.redis.excel.export.template"; // excel export template的prop key
 }

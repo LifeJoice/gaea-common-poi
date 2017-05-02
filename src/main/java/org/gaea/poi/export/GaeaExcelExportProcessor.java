@@ -2,8 +2,8 @@ package org.gaea.poi.export;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.gaea.data.cache.CacheFactory;
-import org.gaea.data.cache.CacheOperator;
+import org.gaea.cache.CacheFactory;
+import org.gaea.cache.CacheOperator;
 import org.gaea.exception.InvalidDataException;
 import org.gaea.exception.SysInitException;
 import org.gaea.exception.ValidationFailedException;
@@ -99,7 +99,7 @@ public class GaeaExcelExportProcessor {
                          * Redis缓存（参考）:
                          * GAEA:EXCEL:EXPORT:TEMPLATE = HashMap< ExcepTemplate id : ExcelTemplate obj >
                          */
-                        cacheOperator.putHashValue(redisRootKey, excelTemplate.getId(), excelTemplate);
+                        cacheOperator.putHashValue(redisRootKey, excelTemplate.getId(), excelTemplate, ExcelTemplate.class);
                     }
                 }
             }

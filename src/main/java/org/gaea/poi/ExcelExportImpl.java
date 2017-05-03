@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -192,7 +193,7 @@ public class ExcelExportImpl implements ExcelExport {
         File file = null;
         String nowTime = DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss");
         // 如果目录的结束没有目录分隔符，加上。
-        if (!"/".equals(fileDir.substring(fileDir.length()-1)) || !"\\".equals(fileDir.substring(fileDir.length()-1))) {
+        if (!"/".equals(fileDir.substring(fileDir.length() - 1)) || !"\\".equals(fileDir.substring(fileDir.length() - 1))) {
             fileDir += File.separator;
         }
         if (StringUtils.isEmpty(fileName)) {
@@ -240,7 +241,13 @@ public class ExcelExportImpl implements ExcelExport {
             for (int j = 0; j < fieldKeys.length; j++) {
                 String fieldKey = fieldKeys[j];
 //                    for (String key : rowData.keySet()) {
-                Object mapValue = rowData.get(fieldKey);
+                Object mapValue = null;
+                /**
+                 * 假设rowData是LinkedCaseInsensitiveMap，则Key应该是大小写不敏感，用全大写去get也没问题。
+                 * 万一传入的map被处理成HashMap之类的，应该默认Key是全大写，也是可以的。
+                 * 附：Spring namedParameterJdbcTemplate.queryForList返回的是LinkedCaseInsensitiveMap，这样对于key（数据库列）是大小写不敏感的。如果变成HashMap就会大小写敏感了。
+                 */
+                mapValue = rowData.get(fieldKey.toUpperCase());
                 Field fieldDef = fieldMap.get(fieldKey); // XML 的field定义
                 // 创建单元格
                 SXSSFCell cell = row.createCell(j);
@@ -279,6 +286,7 @@ public class ExcelExportImpl implements ExcelExport {
     /**
      * 根据Excel Template定义，如果字段有定义其他类型的，例如数字类，则作转换。再把值回写cell。并且把cell的类型设置为对应的类型。
      * 这样，比如对于一些数值类的，在excel里面才可以直接用公式计算。不用再做转换。
+     *
      * @param cell
      * @param fieldDef
      * @param value

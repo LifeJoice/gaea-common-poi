@@ -14,6 +14,7 @@ import org.gaea.poi.config.GaeaPoiDefinition;
 import org.gaea.poi.domain.*;
 import org.gaea.poi.service.ExcelDefineService;
 import org.gaea.poi.util.ExpressParser;
+import org.gaea.poi.util.GaeaPoiUtils;
 import org.gaea.poi.xml.GaeaPoiXmlConfigParser;
 import org.gaea.util.GaeaPropertiesReader;
 import org.slf4j.Logger;
@@ -250,7 +251,7 @@ public class ExcelReaderImpl implements ExcelReader {
                         String dataType = columnDefMap.get(cell.getColumnIndex()).getDataType();
 //                    }
                         // 获取Excel单元格的值。统一String类型。
-                        String value = getCellStringValue(cell, dataType);
+                        String value = GaeaPoiUtils.getCellStringValue(cell, dataType);
                         String key = columnDefMap.get(cell.getColumnIndex()).getName();
                         rowValueMap.put(key, value);
                     }
@@ -341,30 +342,30 @@ public class ExcelReaderImpl implements ExcelReader {
      * @param dataType XML定义的读取类型。为空则按Excel单元格类型转换。
      * @return
      */
-    private String getCellStringValue(Cell cell, String dataType) {
-        String value = "";
-        if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
-            value = cell.getStringCellValue();
-        } else if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-            // 如果是日期类型
-            if (HSSFDateUtil.isCellDateFormatted(cell)) {
-                value = cell.getDateCellValue().toString();
-                // 如果XML配置了对应的日期类型，则按XML配置转换；否则按系统配置的默认年月日时分秒转换。
-                if (Field.DATA_TYPE_DATE.equalsIgnoreCase(dataType)) {
-                    value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT));
-                } else if (Field.DATA_TYPE_TIME.equalsIgnoreCase(dataType)) {
-                    value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_TIME_FORMAT));
-                } else if (Field.DATA_TYPE_DATETIME.equalsIgnoreCase(dataType)) {
-                    value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));
-                } else {
-                    value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));
-                }
-                return value;
-            }
-            value = String.valueOf(cell.getNumericCellValue());
-        }
-        return value;
-    }
+//    private String getCellStringValue(Cell cell, String dataType) {
+//        String value = "";
+//        if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+//            value = cell.getStringCellValue();
+//        } else if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+//            // 如果是日期类型
+//            if (HSSFDateUtil.isCellDateFormatted(cell)) {
+//                value = cell.getDateCellValue().toString();
+//                // 如果XML配置了对应的日期类型，则按XML配置转换；否则按系统配置的默认年月日时分秒转换。
+//                if (Field.DATA_TYPE_DATE.equalsIgnoreCase(dataType)) {
+//                    value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT));
+//                } else if (Field.DATA_TYPE_TIME.equalsIgnoreCase(dataType)) {
+//                    value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_TIME_FORMAT));
+//                } else if (Field.DATA_TYPE_DATETIME.equalsIgnoreCase(dataType)) {
+//                    value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));
+//                } else {
+//                    value = DateFormatUtils.format(cell.getDateCellValue().getTime(), cacheProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));
+//                }
+//                return value;
+//            }
+//            value = String.valueOf(cell.getNumericCellValue());
+//        }
+//        return value;
+//    }
 
 //    private ExcelField getFieldDefine(Cell cell) throws ValidationFailedException {
 //        String myExcelRemark = null;

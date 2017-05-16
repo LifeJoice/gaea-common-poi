@@ -21,11 +21,11 @@ import org.gaea.poi.domain.Block;
 import org.gaea.poi.domain.ExcelTemplate;
 import org.gaea.poi.domain.Field;
 import org.gaea.poi.export.ExcelExport;
+import org.gaea.poi.util.GaeaPoiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -58,7 +58,7 @@ public class ExcelExportImpl implements ExcelExport {
      * @throws ValidationFailedException
      * @throws ProcessFailedException
      */
-    public File export(String excelTemplateId, List<Map<String, Object>> data, String fileDir) throws SysInitException, ValidationFailedException, ProcessFailedException {
+    public File export(String excelTemplateId, List<? extends Map> data, String fileDir) throws SysInitException, ValidationFailedException, ProcessFailedException {
         if (StringUtils.isEmpty(excelTemplateId)) {
             throw new IllegalArgumentException("导出的Excel Template（模板）ID不允许为空！");
         }
@@ -100,7 +100,7 @@ public class ExcelExportImpl implements ExcelExport {
      * @return
      * @throws ValidationFailedException
      */
-    public File export(List<Map<String, Object>> data, String sheetName, Map<String, Field> fieldMap, String fileName, String fileDir) throws ValidationFailedException, ProcessFailedException {
+    public File export(List<? extends Map> data, String sheetName, Map<String, Field> fieldMap, String fileName, String fileDir) throws ValidationFailedException, ProcessFailedException {
         if (MapUtils.isEmpty(fieldMap)) {
             throw new ValidationFailedException("excel template的模板定义，缺失Field的定义！");
         }
@@ -217,13 +217,12 @@ public class ExcelExportImpl implements ExcelExport {
 
     /**
      * 填充数据到sheet对象中。不返回。
-     *
-     * @param sheet
+     *  @param sheet
      * @param data
      * @param fieldMap
      * @param fieldKeys
      */
-    private void fillData(SXSSFSheet sheet, List<Map<String, Object>> data, Map<String, Field> fieldMap, String[] fieldKeys) {
+    private void fillData(SXSSFSheet sheet, List<? extends Map> data, Map<String, Field> fieldMap, String[] fieldKeys) throws ValidationFailedException {
         if (CollectionUtils.isEmpty(data)) {
             return;
         }
@@ -273,12 +272,8 @@ public class ExcelExportImpl implements ExcelExport {
                     value = mapValue == null ? "" : String.valueOf(mapValue);
                 }
                 // 设置默认值为字符
-                cell.setCellType(XSSFCell.CELL_TYPE_STRING);
-                cell.setCellValue(value);
                 // 如果XML定义的有其他类型，再作转换、覆盖！
-                if (fieldDef != null) {
-                    parseCellData(cell, fieldDef, value);
-                }
+                GaeaPoiUtils.setCellValue(cell,value,fieldDef);
             }
         }
     }
@@ -291,25 +286,25 @@ public class ExcelExportImpl implements ExcelExport {
      * @param fieldDef
      * @param value
      */
-    private void parseCellData(SXSSFCell cell, Field fieldDef, String value) {
-        if (Field.DATA_TYPE_NUMBER.equalsIgnoreCase(fieldDef.getDataType()) || Field.DATA_TYPE_DOUBLE.equalsIgnoreCase(fieldDef.getDataType())) {
-            try {
-                cell.setCellType(XSSFCell.CELL_TYPE_NUMERIC);
-                cell.setCellValue(Double.parseDouble(value));
-            } catch (NumberFormatException ex) {
-                // 如果无法转换，可能是带字符还是什么了。直接设为String吧
-                cell.setCellType(XSSFCell.CELL_TYPE_STRING);
-                cell.setCellValue(value);
-            }
-        } else if (Field.DATA_TYPE_INTEGER.equalsIgnoreCase(fieldDef.getDataType())) {
-            try {
-                cell.setCellType(XSSFCell.CELL_TYPE_NUMERIC);
-                cell.setCellValue(Integer.parseInt(value));
-            } catch (NumberFormatException ex) {
-                // 如果无法转换，可能是带字符还是什么了。直接设为String吧
-                cell.setCellType(XSSFCell.CELL_TYPE_STRING);
-                cell.setCellValue(value);
-            }
-        }
-    }
+//    private void parseCellData(SXSSFCell cell, Field fieldDef, String value) {
+//        if (Field.DATA_TYPE_NUMBER.equalsIgnoreCase(fieldDef.getDataType()) || Field.DATA_TYPE_DOUBLE.equalsIgnoreCase(fieldDef.getDataType())) {
+//            try {
+//                cell.setCellType(XSSFCell.CELL_TYPE_NUMERIC);
+//                cell.setCellValue(Double.parseDouble(value));
+//            } catch (NumberFormatException ex) {
+//                // 如果无法转换，可能是带字符还是什么了。直接设为String吧
+//                cell.setCellType(XSSFCell.CELL_TYPE_STRING);
+//                cell.setCellValue(value);
+//            }
+//        } else if (Field.DATA_TYPE_INTEGER.equalsIgnoreCase(fieldDef.getDataType())) {
+//            try {
+//                cell.setCellType(XSSFCell.CELL_TYPE_NUMERIC);
+//                cell.setCellValue(Integer.parseInt(value));
+//            } catch (NumberFormatException ex) {
+//                // 如果无法转换，可能是带字符还是什么了。直接设为String吧
+//                cell.setCellType(XSSFCell.CELL_TYPE_STRING);
+//                cell.setCellValue(value);
+//            }
+//        }
+//    }
 }

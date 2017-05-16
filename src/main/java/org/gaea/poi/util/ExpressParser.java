@@ -56,7 +56,8 @@ public class ExpressParser {
         if (StringUtils.isEmpty(excelRemark)
                 || (StringUtils.indexOf(excelRemark, cacheProperties.get(GaeaPoiDefinition.FIELD_DEFINE_BEGIN)) < 0)
                 || (StringUtils.indexOf(excelRemark, cacheProperties.get(GaeaPoiDefinition.FIELD_DEFINE_END)) < 0)) {
-            throw new IllegalArgumentException("GAEA FIELD定义为空或不完整 : "+excelRemark);
+//            throw new IllegalArgumentException("GAEA FIELD定义为空或不完整 : "+excelRemark);
+            return null;
         }
         String strExpress = StringUtils.substringBetween(excelRemark,
                 cacheProperties.get(GaeaPoiDefinition.FIELD_DEFINE_BEGIN),

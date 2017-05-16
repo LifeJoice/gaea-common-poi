@@ -1,6 +1,7 @@
 package org.gaea.poi;
 
 import org.gaea.exception.ValidationFailedException;
+import org.gaea.poi.domain.Field;
 
 import java.io.InputStream;
 import java.util.List;
@@ -13,6 +14,8 @@ public interface ExcelReader {
     org.gaea.poi.domain.Workbook getWorkbook(InputStream fileIS) throws ValidationFailedException;
 
     List<Map<String, String>> getData(InputStream fileIS) throws ValidationFailedException;
+
+    List<Map<String, String>> getData(InputStream fileIS, Map<String, Field> fieldDefMap) throws ValidationFailedException;
 
     <T> List<T> getData(InputStream fileIS, Class<T> beanClass) throws ValidationFailedException;
 }

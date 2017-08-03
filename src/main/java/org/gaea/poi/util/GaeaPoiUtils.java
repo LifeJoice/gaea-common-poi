@@ -13,6 +13,7 @@ import org.gaea.poi.domain.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -25,8 +26,9 @@ public class GaeaPoiUtils {
     /**
      * 获取excel里一个cell的值。根据类型判断，但最后统一转换为String。
      * 因为POI的接口没有统一返回cell中的值的。
-     *
+     * <p/>
      * copy from ExcelReaderImpl.getCellStringValue
+     *
      * @param cell
      * @param dataType XML定义的读取类型。为空则按Excel单元格类型转换。
      * @return
@@ -60,18 +62,20 @@ public class GaeaPoiUtils {
      * 根据Excel Template定义，如果字段有定义其他类型的，例如数字类，则作转换。再把值回写cell。并且把cell的类型设置为对应的类型。
      * 这样，比如对于一些数值类的，在excel里面才可以直接用公式计算。不用再做转换。
      * <p>
-     *     日期类的，兼容输入是长整型的，或者字符型的（格式yyyy-MM-dd）
+     * 日期类的，兼容输入是长整型的，或者字符型的（格式yyyy-MM-dd）
      * </p>
-     *
+     * <p/>
      * copy from ExcelExportImpl.parseCellData
+     *
      * @param cell
-     * @param value
+     * @param inValue
      * @param fieldDef
      * @throws ValidationFailedException
      */
-    public static void setCellValue(Cell cell, String value, Field fieldDef) throws ValidationFailedException {
+    public static void setCellValue(Cell cell, Object inValue, Field fieldDef) throws ValidationFailedException {
         // 默认单元格类型
         cell.setCellType(XSSFCell.CELL_TYPE_STRING);
+        String value = String.valueOf(inValue);
         try {
             if (StringUtils.isEmpty(fieldDef.getDataType()) || Field.DATA_TYPE_STRING.equalsIgnoreCase(fieldDef.getDataType())) {
                 // default. do nothing.
@@ -82,40 +86,41 @@ public class GaeaPoiUtils {
                 /**
                  * 如果传入的值是整型，先转换成Date，再格式化
                  */
-                if (NumberUtils.isNumber(value)) {
-                    value = DateFormatUtils.format(new Date(Long.parseLong(value)), GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT));
-                }
-                // 按单元格定义，转换格式
-                if (StringUtils.isNotEmpty(fieldDef.getDatetimeFormat())) {
-                    // 先按标准日期格式转成Date，再按特定要求转换格式
-                    value = DateFormatUtils.format(DateUtils.parseDate(value, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT)), fieldDef.getDatetimeFormat());
-                }
-//                cell.setCellValue(value);
+                value = getCellDateTimeValue(inValue, fieldDef, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT));
+//                if (NumberUtils.isNumber(value)) {
+//                    value = DateFormatUtils.format(new Date(Long.parseLong(value)), GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT));
+//                }
+//                // 按单元格定义，转换格式
+//                if (StringUtils.isNotEmpty(fieldDef.getDatetimeFormat())) {
+//                    // 先按标准日期格式转成Date，再按特定要求转换格式
+//                    value = DateFormatUtils.format(DateUtils.parseDate(value, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT)), fieldDef.getDatetimeFormat());
+//                }
             } else if (Field.DATA_TYPE_TIME.equalsIgnoreCase(fieldDef.getDataType())) {
+                value = getCellDateTimeValue(inValue, fieldDef, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_TIME_FORMAT));
                 /**
                  * 如果传入的值是整型，先转换成Date，再格式化
                  */
-                if (NumberUtils.isNumber(value)) {
-                    value = DateFormatUtils.format(new Date(Long.parseLong(value)), GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_TIME_FORMAT));
-                }
-                // 按单元格定义，转换格式
-                if (StringUtils.isNotEmpty(fieldDef.getDatetimeFormat())) {
-                    // 先按标准日期格式转成Date，再按特定要求转换格式
-                    value = DateFormatUtils.format(DateUtils.parseDate(value, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_TIME_FORMAT)), fieldDef.getDatetimeFormat());
-                }
-//                cell.setCellValue(value);
+//                if (NumberUtils.isNumber(value)) {
+//                    value = DateFormatUtils.format(new Date(Long.parseLong(value)), GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_TIME_FORMAT));
+//                }
+//                // 按单元格定义，转换格式
+//                if (StringUtils.isNotEmpty(fieldDef.getDatetimeFormat())) {
+//                    // 先按标准日期格式转成Date，再按特定要求转换格式
+//                    value = DateFormatUtils.format(DateUtils.parseDate(value, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_TIME_FORMAT)), fieldDef.getDatetimeFormat());
+//                }
             } else if (Field.DATA_TYPE_DATETIME.equalsIgnoreCase(fieldDef.getDataType())) {
+                value = getCellDateTimeValue(inValue, fieldDef, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));
                 /**
                  * 如果传入的值是整型，先转换成Date，再格式化
                  */
-                if (NumberUtils.isNumber(value)) {
-                    value = DateFormatUtils.format(new Date(Long.parseLong(value)), GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));
-                }
-                // 按单元格定义，转换格式
-                if (StringUtils.isNotEmpty(fieldDef.getDatetimeFormat())) {
-                    // 先按标准日期格式转成Date，再按特定要求转换格式
-                    value = DateFormatUtils.format(DateUtils.parseDate(value, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT)), fieldDef.getDatetimeFormat());
-                }
+//                if (NumberUtils.isNumber(value)) {
+//                    value = DateFormatUtils.format(new Date(Long.parseLong(value)), GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT));
+//                }
+//                // 按单元格定义，转换格式
+//                if (StringUtils.isNotEmpty(fieldDef.getDatetimeFormat())) {
+//                    // 先按标准日期格式转成Date，再按特定要求转换格式
+//                    value = DateFormatUtils.format(DateUtils.parseDate(value, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATETIME_FORMAT)), fieldDef.getDatetimeFormat());
+//                }
             }
             cell.setCellValue(value);
         } catch (NumberFormatException e) {
@@ -123,5 +128,24 @@ public class GaeaPoiUtils {
         } catch (ParseException e) {
             throw new ValidationFailedException("单元格数据类型错误，转换日期失败！value: " + value + " dataType: " + fieldDef.getDataType(), e);
         }
+    }
+
+    public static String getCellDateTimeValue(Object inValue, Field fieldDef, String dateTimePattern) throws ParseException {
+        String result = "";
+        /* 如果传入的值是整型，先转换成Date，再格式化 */
+        if (inValue instanceof Date || inValue instanceof Timestamp || inValue instanceof java.sql.Date) {
+            // 上面几个类型都是java.util.Date的子类，统统强制转Date
+            result = DateFormatUtils.format((Date) inValue, dateTimePattern);
+        }
+        /* 如果传入的值是整型，先转换成Date，再格式化 */
+        else if (NumberUtils.isNumber(String.valueOf(inValue))) {
+            result = DateFormatUtils.format(new Date(Long.parseLong(String.valueOf(inValue))), dateTimePattern);
+        }
+        // 按单元格定义，转换格式
+        else if (StringUtils.isNotEmpty(fieldDef.getDatetimeFormat())) {
+            // 先按标准日期格式转成Date，再按特定要求转换格式
+            result = DateFormatUtils.format(DateUtils.parseDate(String.valueOf(inValue), dateTimePattern), fieldDef.getDatetimeFormat());
+        }
+        return result;
     }
 }

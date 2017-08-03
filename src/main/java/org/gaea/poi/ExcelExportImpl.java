@@ -250,7 +250,7 @@ public class ExcelExportImpl implements ExcelExport {
                 Field fieldDef = fieldMap.get(fieldKey); // XML 的field定义
                 // 创建单元格
                 SXSSFCell cell = row.createCell(j);
-                String value = "";
+                Object value = "";
                 /**
                  * if 是DataSet的一个结果对象DataItem
                  * 按DataSet方式处理
@@ -269,7 +269,7 @@ public class ExcelExportImpl implements ExcelExport {
                     }
                 } else {
                     // 避免把null对象转成null字符串
-                    value = mapValue == null ? "" : String.valueOf(mapValue);
+                    value = mapValue == null ? "" : mapValue;
                 }
                 // 设置默认值为字符
                 // 如果XML定义的有其他类型，再作转换、覆盖！

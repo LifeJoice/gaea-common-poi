@@ -10,6 +10,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.config.GaeaPoiDefinition;
 import org.gaea.poi.domain.Field;
+import org.gaea.util.GaeaDateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +147,7 @@ public class GaeaPoiUtils {
         // 按单元格定义，转换格式
         else if (StringUtils.isNotEmpty(fieldDef.getDatetimeFormat())) {
             // 先按标准日期格式转成Date，再按特定要求转换格式
-            result = DateFormatUtils.format(DateUtils.parseDate(String.valueOf(inValue), dateTimePattern), fieldDef.getDatetimeFormat());
+            result = DateFormatUtils.format(DateUtils.parseDate(String.valueOf(inValue), GaeaDateTimeUtils.getDefaultConvertPatterns()), fieldDef.getDatetimeFormat());
         }
         return result;
     }

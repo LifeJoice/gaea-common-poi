@@ -1,5 +1,6 @@
 package org.gaea.poi.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.gaea.exception.ValidationFailedException;
@@ -7,6 +8,7 @@ import org.gaea.poi.config.GaeaPoiDefinition;
 import org.gaea.poi.domain.ExcelBlock;
 import org.gaea.poi.domain.ExcelField;
 import org.gaea.poi.domain.ExcelSheet;
+import org.gaea.poi.domain.Field;
 import org.gaea.util.GaeaPropertiesReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Gaea POI针对EXCEL里面表达式的通用解析器。
@@ -26,7 +30,7 @@ public class ExpressParser {
     @Autowired
     @Qualifier("gaeaPOIProperties")
     private GaeaPropertiesReader cacheProperties;
-    private ObjectMapper mapper = new ObjectMapper();
+    private static ObjectMapper mapper = new ObjectMapper();
 
     // 把一个单元格上的批注，抽取出Sheet（包含Block）的定义
     public ExcelSheet parseSheet(String excelRemark) throws ValidationFailedException {
@@ -90,5 +94,69 @@ public class ExpressParser {
 //        String searchStr = "#GAEA_DEF_FIELD[";
         String searchStr = "]GAEA_DEF_FIELD#";
         System.out.println(StringUtils.indexOf(excelRemark,searchStr));
+    }
+
+    /**
+     * 根据输入项，创建一个ExcelSheet对象。
+     * @param excelTemplateId
+     * @return
+     * @throws ValidationFailedException
+     */
+    public static ExcelSheet createSheet(String excelTemplateId) throws ValidationFailedException {
+        if(StringUtils.isEmpty(excelTemplateId)){
+            throw new ValidationFailedException("模板id为空，无法创建Gaea ExcelSheet定义对象！");
+        }
+        ExcelSheet excelSheet = new ExcelSheet();
+        excelSheet.setId(excelTemplateId);
+        ExcelBlock excelBlock = new ExcelBlock();
+        // 当前还没有启用block功能，默认给个AUTO
+        excelBlock.setId("AUTO");
+        excelSheet.getBlockList().add(excelBlock);
+        return excelSheet;
+    }
+
+    /**
+     * 创建gaea ExcelSheet定义的模板字符串。
+     * 把excelSheet定义对象，转换为Excel中可以直接用的Gaea模板定义（字符串）。
+     * @param excelSheet
+     * @return
+     * @throws JsonProcessingException
+     */
+    public static String createSheetDefine(ExcelSheet excelSheet) throws JsonProcessingException {
+        if(excelSheet==null){
+            return "";
+        }
+        StringBuilder result = new StringBuilder();
+        result.append(GaeaPoiProperties.get(GaeaPoiDefinition.DEFINE_BEGIN));
+        result.append("\n");
+        result.append(mapper.writeValueAsString(excelSheet));
+        result.append("\n");
+        result.append(GaeaPoiProperties.get(GaeaPoiDefinition.DEFINE_END));
+        return result.toString();
+    }
+
+    /**
+     * 把field定义对象，转换为Excel中可以直接用的Gaea模板定义（字符串）。
+     *
+     * @param field
+     * @return
+     * @throws JsonProcessingException
+     */
+    public static String createFieldDefine(Field field) throws JsonProcessingException {
+        if(field==null){
+            return "";
+        }
+        // 先转换成gaea的ExcelField
+        ExcelField excelField = new ExcelField();
+        excelField.setColumnIndex(field.getColumnIndex());
+        excelField.setName(field.getName());
+
+        StringBuilder result = new StringBuilder("\n");
+        result.append(GaeaPoiProperties.get(GaeaPoiDefinition.FIELD_DEFINE_BEGIN));
+        result.append("\n");
+        result.append(mapper.writeValueAsString(excelField));
+        result.append("\n");
+        result.append(GaeaPoiProperties.get(GaeaPoiDefinition.FIELD_DEFINE_END));
+        return result.toString();
     }
 }

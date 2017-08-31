@@ -1,5 +1,6 @@
 package org.gaea.poi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -11,16 +12,17 @@ import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.gaea.data.dataset.Item;
 import org.gaea.exception.ProcessFailedException;
 import org.gaea.exception.SysInitException;
 import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.cache.GaeaPoiCache;
 import org.gaea.poi.domain.Block;
+import org.gaea.poi.domain.ExcelSheet;
 import org.gaea.poi.domain.ExcelTemplate;
 import org.gaea.poi.domain.Field;
 import org.gaea.poi.export.ExcelExport;
+import org.gaea.poi.util.ExpressParser;
 import org.gaea.poi.util.GaeaPoiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +90,9 @@ public class ExcelExportImpl implements ExcelExport {
         if (MapUtils.isEmpty(fieldMap)) {
             throw new ValidationFailedException("excel template的模板定义，缺失Field的定义！");
         }
-        return export(data, null, fieldMap, excelTemplate.getFileName(), fileDir);
+        // 从模板，获取ExcelSheet定义对象
+        ExcelSheet excelSheet = ExpressParser.createSheet(excelTemplateId);
+        return export(data, null, fieldMap, excelTemplate.getFileName(), fileDir, excelSheet);
     }
 
     /**
@@ -101,6 +105,23 @@ public class ExcelExportImpl implements ExcelExport {
      * @throws ValidationFailedException
      */
     public File export(List<? extends Map> data, String sheetName, Map<String, Field> fieldMap, String fileName, String fileDir) throws ValidationFailedException, ProcessFailedException {
+        return export(data, sheetName, fieldMap, fileName, fileDir, null);
+    }
+
+    /**
+     * 如果excelSheet对象不为空，导出的Excel即为导入Excel模板！可以直接用回导出文件再导入。
+     *
+     * @param data       可以为空。空只导出标题行。可作模板下载用。
+     * @param sheetName
+     * @param fieldMap   列定义。
+     * @param fileName   文件名。不需要带后缀。带了一般也没错。
+     * @param fileDir    文件存放目录。
+     * @param excelSheet 可以为空！对应的gaea excel sheet定义对象。如果有，可以导出gaea的模板定义。
+     * @return
+     * @throws ValidationFailedException
+     * @throws ProcessFailedException
+     */
+    private File export(List<? extends Map> data, String sheetName, Map<String, Field> fieldMap, String fileName, String fileDir, ExcelSheet excelSheet) throws ValidationFailedException, ProcessFailedException {
         if (MapUtils.isEmpty(fieldMap)) {
             throw new ValidationFailedException("excel template的模板定义，缺失Field的定义！");
         }
@@ -127,8 +148,16 @@ public class ExcelExportImpl implements ExcelExport {
         // When the comment box is visible, have it show in a 1x3 space
         ClientAnchor anchor = factory.createClientAnchor();
 
-        // 第一行，先写标题
-        SXSSFRow row = sheet.createRow(0);
+        int rowIndex = 0;
+        // 第一行（隐藏），Gaea框架的模板定义
+        if (excelSheet != null) {
+            SXSSFRow firstRow = sheet.createRow(rowIndex);
+            createGaeaRow(excelSheet, firstRow, fieldMap, drawing, anchor, factory);
+            rowIndex++;
+        }
+
+        // 第二行，先写标题
+        SXSSFRow row = sheet.createRow(rowIndex);
         String[] fieldKeys = fieldMap.keySet().toArray(new String[]{});
         for (int j = 0; j < fieldKeys.length; j++) {
             String fieldKey = fieldKeys[j];
@@ -181,6 +210,85 @@ public class ExcelExportImpl implements ExcelExport {
     }
 
     /**
+     * 初始化第一行。创建gaea Excel模板定义说明的行。
+     *
+     * @param row
+     * @param fieldMap
+     * @param drawing
+     * @param anchor
+     * @param factory
+     */
+    private void createGaeaRow(ExcelSheet excelSheet, SXSSFRow row, Map<String, Field> fieldMap, Drawing drawing, ClientAnchor anchor, CreationHelper factory) {
+        // gaea Excel模板定义说明的行不可见。避免给用户困扰。
+        row.setZeroHeight(true);
+
+        String[] fieldKeys = fieldMap.keySet().toArray(new String[]{});
+        for (int j = 0; j < fieldKeys.length; j++) {
+            String fieldKey = fieldKeys[j];
+            /**
+             * 用结果集data的map的key，去查找title map的key。这两者应该是一致的。
+             * 参考CommonViewQueryServiceImpl.query，是经过schemaDataService.transformViewData处理过的。
+             */
+            Field field = fieldMap.get(fieldKey);
+
+            // ------------------------> 好吧，这段写入单元格内容，其实不是重点
+            String colTitle = field == null ? "" : field.getTitle();
+            SXSSFCell cell = row.createCell(j);
+            cell.setCellValue(colTitle);
+            // 非重点 END <------------------------
+
+            // 创建gaea Excel模板定义说明的单元格
+            createGaeaCell(excelSheet, row, cell, field, drawing, anchor, factory);
+        }
+    }
+
+    /**
+     * 创建gaea框架的Excel模板单元格/行。以便可以直接用回导出文件再导入。
+     *
+     * @param row
+     * @param cell
+     * @param field
+     * @param drawing
+     * @param anchor
+     * @param factory
+     */
+    private void createGaeaCell(ExcelSheet excelSheet, SXSSFRow row, SXSSFCell cell, Field field, Drawing drawing, ClientAnchor anchor, CreationHelper factory) {
+        // 没有ExcelSheet对象就略过
+        if (excelSheet == null) {
+            return;
+        }
+        int cellNo = cell.getColumnIndex();
+        StringBuilder excelComment = new StringBuilder(); // 某个单元格的备注（这里就是gaea框架的Excel模板定义）
+        try {
+            // 第一个单元格，需要有sheet定义
+            if (cellNo == 0) {
+                String sheetDef = ExpressParser.createSheetDefine(excelSheet);
+                excelComment.append(sheetDef);
+            }
+            // 转换生成field定义
+            if (field != null) {
+                String fieldDef = ExpressParser.createFieldDefine(field);
+                excelComment.append(fieldDef);
+            }
+            // 设定comment位置
+            anchor.setCol1(cell.getColumnIndex());
+            anchor.setCol2(cell.getColumnIndex() + 5); // 设定comment的宽度
+            anchor.setRow1(row.getRowNum());
+            anchor.setRow2(row.getRowNum() + 15); // 设定comment的高度
+
+            // Create the comment and set the text+author
+            Comment comment = drawing.createCellComment(anchor);
+            RichTextString str = factory.createRichTextString(excelComment.toString());
+            comment.setString(str);
+            comment.setAuthor("System");
+            // Assign the comment to the cell
+            cell.setCellComment(comment);
+        } catch (JsonProcessingException e) {
+            logger.error("生成gaea excel模板定义行出错！Json转换失败！", e);
+        }
+    }
+
+    /**
      * 把workbook写入本地文件。
      *
      * @param workbook
@@ -217,7 +325,8 @@ public class ExcelExportImpl implements ExcelExport {
 
     /**
      * 填充数据到sheet对象中。不返回。
-     *  @param sheet
+     *
+     * @param sheet
      * @param data
      * @param fieldMap
      * @param fieldKeys
@@ -273,7 +382,7 @@ public class ExcelExportImpl implements ExcelExport {
                 }
                 // 设置默认值为字符
                 // 如果XML定义的有其他类型，再作转换、覆盖！
-                GaeaPoiUtils.setCellValue(cell,value,fieldDef);
+                GaeaPoiUtils.setCellValue(cell, value, fieldDef);
             }
         }
     }

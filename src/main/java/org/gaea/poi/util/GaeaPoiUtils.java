@@ -37,7 +37,7 @@ public class GaeaPoiUtils {
         String value = "";
         if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
             value = cell.getStringCellValue();
-        } else if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+        } else if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) { // cellType=0, 不只是数字，常规也是这个
             // 如果是日期类型
             if (HSSFDateUtil.isCellDateFormatted(cell)) {
                 value = cell.getDateCellValue().toString();
@@ -53,7 +53,9 @@ public class GaeaPoiUtils {
                 }
                 return value;
             }
-            value = String.valueOf(cell.getNumericCellValue());
+//            value = String.valueOf(cell.getNumericCellValue());
+            // 这里要用原始值。否则对于一些值例如：“1”，在Excel显示是“1”，getNumericCellValue读进来就会变成“1.0”
+            value = ((XSSFCell)cell).getRawValue();
         }
         return value;
     }

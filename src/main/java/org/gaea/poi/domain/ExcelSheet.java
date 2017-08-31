@@ -1,6 +1,7 @@
 package org.gaea.poi.domain;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,6 +20,9 @@ public class ExcelSheet implements Serializable{
     }
 
     public List<ExcelBlock> getBlockList() {
+        if(blockList==null){
+            blockList = new ArrayList<ExcelBlock>();
+        }
         return blockList;
     }
 

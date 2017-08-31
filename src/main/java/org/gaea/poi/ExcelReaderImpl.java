@@ -1,10 +1,6 @@
 package org.gaea.poi;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -24,10 +20,16 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Component;
 
+import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -188,14 +190,16 @@ public class ExcelReaderImpl implements ExcelReader {
             //页Sheet是从0开始索引的
             Sheet sheet = wb.getSheetAt(0);
             List<Map<String, String>> dataList = getData(sheet);
-            for (int i = 0; dataList != null && i < dataList.size(); i++) {
-                T bean = BeanUtils.instantiate(beanClass);
-                BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
-                wrapper.setAutoGrowNestedPaths(true);
-                Map<String, String> dataMap = dataList.get(i);
-                wrapper.setPropertyValues(dataMap);
-                results.add(bean);
-            }
+//            for (int i = 0; dataList != null && i < dataList.size(); i++) {
+//                // TODO 这里可以优化！没必要放在循环里面啊！！
+//                T bean = BeanUtils.instantiate(beanClass);
+//                BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
+//                wrapper.setAutoGrowNestedPaths(true);
+//                Map<String, String> dataMap = dataList.get(i);
+//                wrapper.setPropertyValues(dataMap);
+//                results.add(bean);
+//            }
+            results = org.gaea.util.BeanUtils.getData(dataList, beanClass);
         } catch (IOException e) {
             logger.error("通用导入excel，解析文件IO错误。", e);
         } catch (InvalidFormatException e) {
@@ -231,10 +235,13 @@ public class ExcelReaderImpl implements ExcelReader {
         //利用foreach循环 遍历sheet中的所有行
         for (Row row : sheet) {
             Map<String, String> rowValueMap = new HashMap<String, String>();
-            if (row.getRowNum() == 0) {
+            if (row.getRowNum() == GaeaPoiDefinition.GAEA_DEFINE_ROW) {
                 // 获取Excel中列定义，合并外部传入定义（如果有），并转换为基于列索引的map
                 columnDefMap = excelDefineService.getFieldsDefine(row, fieldDefMap);
-            } else {
+            } else if (row.getRowNum() == GaeaPoiDefinition.EXCEL_TITLE_ROW) {
+                // do nothing
+                // 第二行就是一般的Excel表普通title(表示会略过, 不会当数据读取)
+            }else {
                 //遍历row中的所有方格
                 for (Cell cell : row) {
 //                if (cell.getRowIndex() == 0) {

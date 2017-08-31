@@ -4,6 +4,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.gaea.exception.ValidationFailedException;
+import org.gaea.poi.config.GaeaPoiDefinition;
 import org.gaea.poi.domain.*;
 import org.gaea.poi.domain.Workbook;
 import org.gaea.poi.service.ExcelDefineService;
@@ -61,7 +62,7 @@ public class ExcelDefineServiceImpl implements ExcelDefineService {
             Workbook xmlWorkbook = null;
             for (Row row : sheet) {
                 // 暂时只在第一行定义导入表达式
-                if (row.getRowNum() == 0) {
+                if (row.getRowNum() == GaeaPoiDefinition.GAEA_DEFINE_ROW) {
                     Block block = null;// 所有的数据都关联到块，所以必须先有block定义
                     //遍历row中的所有方格
                     for (Cell cell : row) {
@@ -168,8 +169,9 @@ public class ExcelDefineServiceImpl implements ExcelDefineService {
      * <p>
      *     获取行里每一列的定义. 如果还传入了fieldDefMap(很可能来自XML定义等), 则合并两者定义.
      * </p>
+     * <p>如果Excel里面没有Gaea定义，则会略过！</p>
      * @param row
-     * @param fieldDefMap
+     * @param fieldDefMap    可以为空。为空，即以Excel里面的Gaea定义为准！
      * @return
      * @throws ValidationFailedException
      */
@@ -184,7 +186,10 @@ public class ExcelDefineServiceImpl implements ExcelDefineService {
                     throw new ValidationFailedException(MessageFormat.format("Excel的Field定义的name不允许为空！row:{0} column:{1}",0,cell.getColumnIndex()).toString());
                 }
                 // 是否有传入的列定义
-                Field field = fieldDefMap.get(excelField.getName());
+                Field field = null;
+                if(fieldDefMap!=null) {
+                    field = fieldDefMap.get(excelField.getName());
+                }
                 // 没有则创建
                 if(field==null){
                     field = toField(excelField);

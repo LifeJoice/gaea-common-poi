@@ -1,6 +1,5 @@
 package org.gaea.poi;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -15,21 +14,12 @@ import org.gaea.poi.xml.GaeaPoiXmlConfigParser;
 import org.gaea.util.GaeaPropertiesReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Component;
 
-import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +52,7 @@ public class ExcelReaderImpl implements ExcelReader {
             //页Sheet是从0开始索引的。默认先支持一个sheet。
             Sheet sheet = wb.getSheetAt(0);
             // 获取Gaea WorkBook定义
-            result = excelDefineService.getWorkbookDefine(fileIS, wb);
+            result = excelDefineService.getWorkbookDefine(wb);
 //            org.gaea.poi.domain.Workbook xmlWorkbook = null;
 //            for (Row row : sheet) {
 //                // 暂时只在第一行定义导入表达式

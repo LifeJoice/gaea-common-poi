@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,12 +40,11 @@ public class ExcelDefineServiceImpl implements ExcelDefineService {
      *
      * 重构。把定义相关的，放到这个service中。
      * copy from ExcelReader.getWorkbook by Iverson 2017-5-12
-     * @param excelIS
      * @param apacheWorkbook    apache的Workbook对象。主要用于获取第一个sheet的第一行，获取模板定义和列定义。
      * @return
      * @throws ValidationFailedException
      */
-    public Workbook getWorkbookDefine(InputStream excelIS, org.apache.poi.ss.usermodel.Workbook apacheWorkbook) throws ValidationFailedException {
+    public Workbook getWorkbookDefine(org.apache.poi.ss.usermodel.Workbook apacheWorkbook) throws ValidationFailedException {
         Workbook result = null;
 //        result.setBlockList(new ArrayList<Block>());
         Map<Integer, Field> columnFieldDefMap = new HashMap<Integer, Field>();

@@ -24,6 +24,7 @@ import org.gaea.poi.domain.Field;
 import org.gaea.poi.export.ExcelExport;
 import org.gaea.poi.util.ExpressParser;
 import org.gaea.poi.util.GaeaPoiUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,7 +106,9 @@ public class ExcelExportImpl implements ExcelExport {
      * @throws ValidationFailedException
      */
     public File export(List<? extends Map> data, String sheetName, Map<String, Field> fieldMap, String fileName, String fileDir) throws ValidationFailedException, ProcessFailedException {
-        return export(data, sheetName, fieldMap, fileName, fileDir, null);
+        ExcelSheet excelSheet = new ExcelSheet();
+        excelSheet.setId("AUTO");
+        return export(data, sheetName, fieldMap, fileName, fileDir, excelSheet);
     }
 
     /**
@@ -158,6 +161,69 @@ public class ExcelExportImpl implements ExcelExport {
 
         // 第二行，先写标题
         SXSSFRow row = sheet.createRow(rowIndex);
+        createTitleRow(sheet, row, fieldMap, drawing, anchor, factory);
+        String[] fieldKeys = fieldMap.keySet().toArray(new String[]{});
+//        for (int j = 0; j < fieldKeys.length; j++) {
+//            String fieldKey = fieldKeys[j];
+//            /**
+//             * 用结果集data的map的key，去查找title map的key。这两者应该是一致的。
+//             * 参考CommonViewQueryServiceImpl.query，是经过schemaDataService.transformViewData处理过的。
+//             */
+//            Field titleField = fieldMap.get(fieldKey);
+//            String colTitle = titleField == null ? "" : titleField.getTitle();
+//            SXSSFCell cell = row.createCell(j);
+//            cell.setCellValue(colTitle);
+//            // 设定列宽
+//            if (NumberUtils.isNumber(titleField.getWidth())) {
+//                sheet.setColumnWidth(j, Integer.parseInt(titleField.getWidth()) * 256); // 根据API，这里设的宽度是字符，不是像素。而且跟字体有关。宽度1=一个字的1/256.
+//            }
+//            /**
+//             * 设置批注comment
+//             */
+//            if (titleField != null && StringUtils.isNotEmpty(titleField.getTitleComment())) {
+//                anchor.setCol1(cell.getColumnIndex());
+//                anchor.setCol2(cell.getColumnIndex() + 1);
+//                anchor.setRow1(row.getRowNum());
+//                anchor.setRow2(row.getRowNum() + 3);
+//
+//                // Create the comment and set the text+author
+//                Comment comment = drawing.createCellComment(anchor);
+//                RichTextString str = factory.createRichTextString(titleField.getTitleComment());
+//                comment.setString(str);
+//                comment.setAuthor("System");
+//                // Assign the comment to the cell
+//                cell.setCellComment(comment);
+//            }
+//        }
+        /**
+         * 填充数据。
+         * sheet对象会被更新。所以没有返回。
+         */
+        fillData(sheet, data, fieldMap, fieldKeys, rowIndex);
+        /**
+         * 把文件先写入本地。这个过程，如果数据量巨大，会分批写入。一定程度避免内存溢出。
+         */
+        File file = null;
+        try {
+            file = writeFile(workbook, fileName, fileDir);
+        } catch (IOException e) {
+            logger.error("excel写入磁盘失败！", e);
+            throw new ProcessFailedException("excel写入磁盘失败！" + e.getMessage());
+        }
+        return file;
+    }
+
+    /**
+     * 创建Excel的标题行。
+     * 这个标题行是不带Gaea框架备注的表达式的。供用户使用的。
+     * @param sheet
+     * @param row
+     * @param fieldMap
+     * @param drawing
+     * @param anchor
+     * @param factory
+     */
+    private void createTitleRow(SXSSFSheet sheet, SXSSFRow row, Map<String, Field> fieldMap, Drawing drawing, ClientAnchor anchor, CreationHelper factory) {
         String[] fieldKeys = fieldMap.keySet().toArray(new String[]{});
         for (int j = 0; j < fieldKeys.length; j++) {
             String fieldKey = fieldKeys[j];
@@ -191,22 +257,6 @@ public class ExcelExportImpl implements ExcelExport {
                 cell.setCellComment(comment);
             }
         }
-        /**
-         * 填充数据。
-         * sheet对象会被更新。所以没有返回。
-         */
-        fillData(sheet, data, fieldMap, fieldKeys);
-        /**
-         * 把文件先写入本地。这个过程，如果数据量巨大，会分批写入。一定程度避免内存溢出。
-         */
-        File file = null;
-        try {
-            file = writeFile(workbook, fileName, fileDir);
-        } catch (IOException e) {
-            logger.error("excel写入磁盘失败！", e);
-            throw new ProcessFailedException("excel写入磁盘失败！" + e.getMessage());
-        }
-        return file;
     }
 
     /**
@@ -299,7 +349,8 @@ public class ExcelExportImpl implements ExcelExport {
      */
     private File writeFile(SXSSFWorkbook workbook, String fileName, String fileDir) throws IOException {
         File file = null;
-        String nowTime = DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss");
+//        String nowTime = DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss");
+        String nowTime = new DateTime().toString("yyyyMMdd_HHmmss");
         // 如果目录的结束没有目录分隔符，加上。
         if (!"/".equals(fileDir.substring(fileDir.length() - 1)) || !"\\".equals(fileDir.substring(fileDir.length() - 1))) {
             fileDir += File.separator;
@@ -325,13 +376,14 @@ public class ExcelExportImpl implements ExcelExport {
 
     /**
      * 填充数据到sheet对象中。不返回。
-     *
-     * @param sheet
+     *  @param sheet
      * @param data
      * @param fieldMap
      * @param fieldKeys
+     * @param rowIndex     可以为空。前面已经添加的去到第几行了。
      */
-    private void fillData(SXSSFSheet sheet, List<? extends Map> data, Map<String, Field> fieldMap, String[] fieldKeys) throws ValidationFailedException {
+    private void fillData(SXSSFSheet sheet, List<? extends Map> data, Map<String, Field> fieldMap, String[] fieldKeys, Integer rowIndex) throws ValidationFailedException {
+        rowIndex = rowIndex==null?0: rowIndex+1;
         if (CollectionUtils.isEmpty(data)) {
             return;
         }
@@ -341,7 +393,7 @@ public class ExcelExportImpl implements ExcelExport {
         // 遍历每一行数据
         for (int i = 0; i < data.size(); i++) {
             Map<String, Object> rowData = data.get(i);
-            SXSSFRow row = sheet.createRow((short) (i + 1));
+            SXSSFRow row = sheet.createRow(rowIndex+i);
 //            String[] fieldKeys = fieldMap.keySet().toArray(new String[]{});
             /**
              * 遍历每一列

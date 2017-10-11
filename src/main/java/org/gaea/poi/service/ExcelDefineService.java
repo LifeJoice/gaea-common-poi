@@ -5,14 +5,13 @@ import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.domain.*;
 import org.gaea.poi.domain.Workbook;
 
-import java.io.InputStream;
 import java.util.Map;
 
 /**
  * Created by iverson on 2017/5/10.
  */
 public interface ExcelDefineService {
-    Workbook getWorkbookDefine(InputStream excelIS, org.apache.poi.ss.usermodel.Workbook apacheWorkbook) throws ValidationFailedException;
+    Workbook getWorkbookDefine(org.apache.poi.ss.usermodel.Workbook apacheWorkbook) throws ValidationFailedException;
 
     ExcelSheet getSheetDefine(Cell cell) throws ValidationFailedException;
 

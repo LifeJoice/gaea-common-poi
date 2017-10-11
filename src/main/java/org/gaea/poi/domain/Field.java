@@ -24,7 +24,7 @@ public class Field implements Serializable{
     public static final String TRANSFER_BY_DEFAULT = "default"; // 默认默认1 就是object.toString
     public static final String TRANSFER_BY_DS_VALUE = "ds_value"; // 默认按数据集的value（Item.value）转换
     public static final String TRANSFER_BY_DS_TEXT = "ds_text"; // 默认按数据集的text（Item.text）转换
-    private String width; // 单元格的宽度
+    private String width = "10"; // 单元格的宽度
     private String dataSetId; // 数据集的id。用来做值的转换。
     private String dbColumnName; // 数据库字段名. 基于SQL导出用。
     private String titleComment; // 标题行的注解

@@ -10,7 +10,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jdkLevel>1.6</jdkLevel>
-        <gaea.common.version>0.5.1.0-SNAPSHOT</gaea.common.version>
+        <gaea.common.version>0.5.3.0-SNAPSHOT</gaea.common.version>
         <spring.version>4.2.1.RELEASE</spring.version>
         <apache.poi.version>3.14</apache.poi.version>
         <jackson.version>2.6.1</jackson.version>

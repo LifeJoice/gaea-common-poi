@@ -134,6 +134,9 @@ public class GaeaPoiUtils {
     }
 
     public static String getCellDateTimeValue(Object inValue, Field fieldDef, String dateTimePattern) throws ParseException {
+        if(inValue instanceof String && StringUtils.isEmpty((CharSequence) inValue)){
+            return "";
+        }
         String result = "";
         /* 如果传入的值是整型，先转换成Date，再格式化 */
         if (inValue instanceof Date || inValue instanceof Timestamp || inValue instanceof java.sql.Date) {

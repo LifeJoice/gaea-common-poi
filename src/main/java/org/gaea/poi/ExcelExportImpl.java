@@ -256,6 +256,10 @@ public class ExcelExportImpl implements ExcelExport {
                 // Assign the comment to the cell
                 cell.setCellComment(comment);
             }
+            // 是否显示列
+            if(!titleField.isVisible()){
+                sheet.setColumnHidden(j, true);
+            }
         }
     }
 

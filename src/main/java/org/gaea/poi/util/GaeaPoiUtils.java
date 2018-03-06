@@ -56,7 +56,7 @@ public class GaeaPoiUtils {
             }
 //            value = String.valueOf(cell.getNumericCellValue());
             // 这里要用原始值。否则对于一些值例如：“1”，在Excel显示是“1”，getNumericCellValue读进来就会变成“1.0”
-            value = ((XSSFCell)cell).getRawValue();
+            value = ((XSSFCell) cell).getRawValue();
         }
         return value;
     }
@@ -86,10 +86,11 @@ public class GaeaPoiUtils {
                 cell.setCellType(XSSFCell.CELL_TYPE_NUMERIC);
 //                cell.setCellValue(value);
             } else if (Field.DATA_TYPE_DATE.equalsIgnoreCase(fieldDef.getDataType())) {
+                String dtPattern = StringUtils.isNotEmpty(fieldDef.getDatetimeFormat()) ? fieldDef.getDatetimeFormat() : GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT);
                 /**
                  * 如果传入的值是整型，先转换成Date，再格式化
                  */
-                value = getCellDateTimeValue(inValue, fieldDef, GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT));
+                value = getCellDateTimeValue(inValue, fieldDef, dtPattern);
 //                if (NumberUtils.isNumber(value)) {
 //                    value = DateFormatUtils.format(new Date(Long.parseLong(value)), GaeaPoiProperties.get(GaeaPoiDefinition.POI_DEFAULT_DATE_FORMAT));
 //                }
@@ -134,7 +135,7 @@ public class GaeaPoiUtils {
     }
 
     public static String getCellDateTimeValue(Object inValue, Field fieldDef, String dateTimePattern) throws ParseException {
-        if(inValue instanceof String && StringUtils.isEmpty((CharSequence) inValue)){
+        if (inValue instanceof String && StringUtils.isEmpty((CharSequence) inValue)) {
             return "";
         }
         String result = "";

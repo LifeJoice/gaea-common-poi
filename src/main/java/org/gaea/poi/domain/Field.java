@@ -28,6 +28,7 @@ public class Field implements Serializable{
     private String dataSetId; // 数据集的id。用来做值的转换。
     private String dbColumnName; // 数据库字段名. 基于SQL导出用。
     private String titleComment; // 标题行的注解
+    private boolean visible = true; // 列是否可见
 
     public String getName() {
         return name;
@@ -107,5 +108,13 @@ public class Field implements Serializable{
 
     public void setTitleComment(String titleComment) {
         this.titleComment = titleComment;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 }

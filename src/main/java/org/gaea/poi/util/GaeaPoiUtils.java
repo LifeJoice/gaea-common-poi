@@ -1,5 +1,6 @@
 package org.gaea.poi.util;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -13,16 +14,19 @@ import org.gaea.poi.domain.Field;
 import org.gaea.util.GaeaDateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Created by iverson on 2017/5/16.
  */
 public class GaeaPoiUtils {
-    private final Logger logger = LoggerFactory.getLogger(GaeaPoiUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(GaeaPoiUtils.class);
 
     /**
      * 获取excel里一个cell的值。根据类型判断，但最后统一转换为String。
@@ -154,5 +158,26 @@ public class GaeaPoiUtils {
             result = DateFormatUtils.format(DateUtils.parseDate(String.valueOf(inValue), GaeaDateTimeUtils.getDefaultConvertPatterns()), fieldDef.getDatetimeFormat());
         }
         return result;
+    }
+
+    /**
+     * 由于通过Block获取的FieldMap，是用了db-column-name作为key。这里转换为用name作为map的key
+     * @param fieldMap
+     * @return
+     */
+    public static LinkedCaseInsensitiveMap<Field> getNameColumnMap(Map<String, Field> fieldMap) {
+        if (MapUtils.isEmpty(fieldMap)) {
+            return null;
+        }
+        LinkedCaseInsensitiveMap<Field> columnMap = new LinkedCaseInsensitiveMap<Field>();
+        for (String key : fieldMap.keySet()) {
+            Field excelField = fieldMap.get(key);
+            if (StringUtils.isEmpty(excelField.getDbColumnName())) {
+                logger.debug("XML配置的excel field确实db-column-name，无法转换成DbNameColumnMap.Field name:{}", excelField.getName());
+                continue;
+            }
+            columnMap.put(excelField.getName(), excelField);
+        }
+        return columnMap;
     }
 }

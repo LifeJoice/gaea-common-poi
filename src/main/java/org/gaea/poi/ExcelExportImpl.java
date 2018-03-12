@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -91,9 +92,11 @@ public class ExcelExportImpl implements ExcelExport {
         if (MapUtils.isEmpty(fieldMap)) {
             throw new ValidationFailedException("excel template的模板定义，缺失Field的定义！");
         }
+        // fieldMap转换为 key=name，用name做检索生成数据
+        LinkedCaseInsensitiveMap keyIsNameFieldMap = GaeaPoiUtils.getNameColumnMap(fieldMap);
         // 从模板，获取ExcelSheet定义对象
         ExcelSheet excelSheet = ExpressParser.createSheet(excelTemplateId);
-        return export(data, null, fieldMap, excelTemplate.getFileName(), fileDir, excelSheet);
+        return export(data, null, keyIsNameFieldMap, excelTemplate.getFileName(), fileDir, excelSheet);
     }
 
     /**

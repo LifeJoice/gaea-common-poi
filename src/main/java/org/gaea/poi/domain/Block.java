@@ -25,7 +25,7 @@ public class Block<T> implements Serializable{
     private String entityClass;// 数据对应的bean全名。例如：com.abc.domain.UserEntity
     private ExcelSheet sheetDefine;
     private List<ExcelField> fieldDefines;
-    private Map<String,Field> fieldMap = new LinkedHashMap<String, Field>();// Field其实是有序的。因为一个excel里面的column定义是有序的。key ： XML定义的name（或Excel定义的name）
+    private Map<String,Field> fieldMap = new LinkedHashMap<String, Field>();// Field其实是有序的。因为一个excel里面的column定义是有序的。key ： XML定义（或Excel定义）的db-column-name
     private List<T> data;
     private String dataSetId; // 对应的数据集。导出用。
 

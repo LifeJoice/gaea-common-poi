@@ -155,11 +155,11 @@ public class ExcelExportImpl implements ExcelExport {
         ClientAnchor anchor = factory.createClientAnchor();
 
         int rowIndex = 0;
-        // 第一行（隐藏），Gaea框架的模板定义
+        // 第二个sheet（隐藏），Gaea框架的模板定义
         if (excelSheet != null) {
-            SXSSFRow firstRow = sheet.createRow(rowIndex);
-            createGaeaRow(excelSheet, firstRow, fieldMap, drawing, anchor, factory);
-            rowIndex++;
+//            SXSSFRow firstRow = sheet.createRow(rowIndex);
+            createGaeaSheet(excelSheet, workbook, fieldMap, anchor, factory);
+//            rowIndex++;
         }
 
         // 第二行，先写标题
@@ -267,6 +267,30 @@ public class ExcelExportImpl implements ExcelExport {
     }
 
     /**
+     * 创建一个gaea框架专用的导入导出模板定义。
+     * <p>
+     *     为什么放在一个sheet里面? 原来是放在一行,但因为影响用户做数据筛选, 所以还是分开一个sheet.
+     * </p>
+     * @param excelSheet
+     * @param workbook
+     * @param fieldMap
+     * @param anchor
+     * @param factory
+     */
+    private void createGaeaSheet(ExcelSheet excelSheet, SXSSFWorkbook workbook, Map<String, Field> fieldMap, ClientAnchor anchor, CreationHelper factory) {
+        SXSSFSheet sheet = workbook.createSheet("Gaea导入模板专用");
+        // 设置表格默认列宽度
+        sheet.setDefaultColumnWidth(DEFAULT_CELL_WIDTH);
+        // 声明一个画图的顶级管理器
+//        CreationHelper factory = workbook.getCreationHelper();
+        Drawing drawing = sheet.createDrawingPatriarch();
+        SXSSFRow firstRow = sheet.createRow(0); // 第一行就是模板行
+        // 隐藏Gaea模板的sheet
+        workbook.setSheetHidden(1,true);
+        createGaeaRow(excelSheet, firstRow, fieldMap, drawing, anchor, factory);
+    }
+
+    /**
      * 初始化第一行。创建gaea Excel模板定义说明的行。
      *
      * @param row
@@ -277,7 +301,7 @@ public class ExcelExportImpl implements ExcelExport {
      */
     private void createGaeaRow(ExcelSheet excelSheet, SXSSFRow row, Map<String, Field> fieldMap, Drawing drawing, ClientAnchor anchor, CreationHelper factory) {
         // gaea Excel模板定义说明的行不可见。避免给用户困扰。
-        row.setZeroHeight(true);
+//        row.setZeroHeight(true);
 
         String[] fieldKeys = fieldMap.keySet().toArray(new String[]{});
         for (int j = 0; j < fieldKeys.length; j++) {

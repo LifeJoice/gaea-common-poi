@@ -51,6 +51,8 @@ public class ExcelReaderImpl implements ExcelReader {
             //得到第一页 sheet
             //页Sheet是从0开始索引的。默认先支持一个sheet。
             Sheet sheet = wb.getSheetAt(0);
+            // 获取gaea框架的模板定义
+            Sheet gaeaSheet = wb.getSheetAt(GaeaPoiDefinition.GAEA_DEFINE_SHEET);
             // 获取Gaea WorkBook定义
             result = excelDefineService.getWorkbookDefine(wb);
 //            org.gaea.poi.domain.Workbook xmlWorkbook = null;
@@ -104,7 +106,7 @@ public class ExcelReaderImpl implements ExcelReader {
             if (result != null && result.getBlockList() != null && result.getBlockList().size() > 0) {
                 Block block = result.getBlockList().get(0);
                 // 获取excel数据，放入block。这里本来应该根据block id分别获取的。暂时未实现。
-                List<Map<String, String>> blockData = getData(sheet, block.getFieldMap());
+                List<Map<String, String>> blockData = getData(sheet, block.getFieldMap(), gaeaSheet);
                 block.setData(blockData);
             }
         } catch (IOException e) {
@@ -130,7 +132,10 @@ public class ExcelReaderImpl implements ExcelReader {
             //得到第一页 sheet
             //页Sheet是从0开始索引的。默认先支持一个sheet。
             Sheet sheet = wb.getSheetAt(0);
-            result = getData(sheet);
+            // 获取gaea框架的模板定义
+            Sheet gaeaSheet = wb.getSheetAt(GaeaPoiDefinition.GAEA_DEFINE_SHEET);
+            // 获取数据
+            result = getData(sheet, gaeaSheet);
             //关闭输入流
             fileIS.close();
         } catch (IOException e) {
@@ -160,7 +165,10 @@ public class ExcelReaderImpl implements ExcelReader {
             //得到第一页 sheet
             //页Sheet是从0开始索引的。默认先支持一个sheet。
             Sheet sheet = wb.getSheetAt(0);
-            result = getData(sheet, fieldDefMap);
+            // 获取gaea框架的模板定义
+            Sheet gaeaSheet = wb.getSheetAt(GaeaPoiDefinition.GAEA_DEFINE_SHEET);
+            // 获取数据
+            result = getData(sheet, fieldDefMap, gaeaSheet);
             //关闭输入流
             fileIS.close();
         } catch (IOException e) {
@@ -179,7 +187,10 @@ public class ExcelReaderImpl implements ExcelReader {
             //得到第一页 sheet
             //页Sheet是从0开始索引的
             Sheet sheet = wb.getSheetAt(0);
-            List<Map<String, String>> dataList = getData(sheet);
+            // 获取gaea框架的模板定义
+            Sheet gaeaSheet = wb.getSheetAt(GaeaPoiDefinition.GAEA_DEFINE_SHEET);
+            // 获取数据
+            List<Map<String, String>> dataList = getData(sheet, gaeaSheet);
 //            for (int i = 0; dataList != null && i < dataList.size(); i++) {
 //                // TODO 这里可以优化！没必要放在循环里面啊！！
 //                T bean = BeanUtils.instantiate(beanClass);
@@ -203,11 +214,12 @@ public class ExcelReaderImpl implements ExcelReader {
      * <p>每一个Map都是一行数据，key=列名 value=值</p>
      *
      * @param sheet
+     * @param gaeaSheet gaea导入模板定义的专有sheet
      * @return
      * @throws ValidationFailedException
      */
-    public List<Map<String, String>> getData(Sheet sheet) throws ValidationFailedException {
-        return getData(sheet, null);
+    public List<Map<String, String>> getData(Sheet sheet, Sheet gaeaSheet) throws ValidationFailedException {
+        return getData(sheet, null, gaeaSheet);
     }
 
     /**
@@ -216,22 +228,25 @@ public class ExcelReaderImpl implements ExcelReader {
      *
      * @param sheet
      * @param fieldDefMap Block的各个字段的gaea定义（包括字段名、数据类型等）。key(cell的gaea定义的name) : value(Field对象)
+     * @param gaeaSheet   gaea导入模板定义的专有sheet
      * @return
      * @throws ValidationFailedException
      */
-    public List<Map<String, String>> getData(Sheet sheet, Map<String, Field> fieldDefMap) throws ValidationFailedException {
+    public List<Map<String, String>> getData(Sheet sheet, Map<String, Field> fieldDefMap, Sheet gaeaSheet) throws ValidationFailedException {
         List<Map<String, String>> results = new ArrayList<Map<String, String>>();
         Map<Integer, Field> columnDefMap = null;
+        // 获取导入模板定义
+        if (gaeaSheet == null) {
+            throw new ValidationFailedException("导入Excel缺少Gaea框架专有的模板定义sheet。无法执行导入读取操作。");
+        }
+        columnDefMap = excelDefineService.getFieldsDefine(gaeaSheet, fieldDefMap);// 获取Excel中列定义，合并外部传入定义（如果有），并转换为基于列索引的map
         //利用foreach循环 遍历sheet中的所有行
         for (Row row : sheet) {
             Map<String, String> rowValueMap = new HashMap<String, String>();
-            if (row.getRowNum() == GaeaPoiDefinition.GAEA_DEFINE_ROW) {
-                // 获取Excel中列定义，合并外部传入定义（如果有），并转换为基于列索引的map
-                columnDefMap = excelDefineService.getFieldsDefine(row, fieldDefMap);
-            } else if (row.getRowNum() == GaeaPoiDefinition.EXCEL_TITLE_ROW) {
+            if (row.getRowNum() == GaeaPoiDefinition.EXCEL_TITLE_ROW) {
                 // do nothing
-                // 第二行就是一般的Excel表普通title(表示会略过, 不会当数据读取)
-            }else {
+                // 第一行就是一般的Excel表普通title(表示会略过, 不会当数据读取)
+            } else {
                 //遍历row中的所有方格
                 for (Cell cell : row) {
 //                if (cell.getRowIndex() == 0) {

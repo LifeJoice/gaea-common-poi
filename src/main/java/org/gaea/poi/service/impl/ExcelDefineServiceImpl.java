@@ -3,6 +3,7 @@ package org.gaea.poi.service.impl;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.gaea.exception.ValidationFailedException;
 import org.gaea.poi.config.GaeaPoiDefinition;
 import org.gaea.poi.domain.*;
@@ -162,6 +163,20 @@ public class ExcelDefineServiceImpl implements ExcelDefineService {
         return excelRemark;
     }
 
+    /**
+     * 从Gaea定义（sheet）中，提取对应的字段的定义。
+     * @param gaeaDefSheet
+     * @param fieldDefMap
+     * @return
+     * @throws ValidationFailedException
+     */
+    public Map<Integer, Field> getFieldsDefine(Sheet gaeaDefSheet, Map<String, Field> fieldDefMap) throws ValidationFailedException {
+        if(gaeaDefSheet!=null){
+            Row row = gaeaDefSheet.getRow(GaeaPoiDefinition.GAEA_DEFINE_ROW);
+            return getFieldsDefine(row, fieldDefMap);
+        }
+        return null;
+    }
     /**
      * 这个一般是针对Excel第一行操作！
      * <p>

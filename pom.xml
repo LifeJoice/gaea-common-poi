@@ -6,7 +6,7 @@
 
     <groupId>org.gaea</groupId>
     <artifactId>gaea-common-poi</artifactId>
-    <version>0.5.1.0-SNAPSHOT</version>
+    <version>0.5.3.7-SNAPSHOT</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jdkLevel>1.6</jdkLevel>

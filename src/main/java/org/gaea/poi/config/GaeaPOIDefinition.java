@@ -22,6 +22,7 @@ public interface GaeaPoiDefinition {
      *                                                              普通定义
      * =============================================================================================================================================
      */
+    public static final int GAEA_DEFINE_SHEET = 1; // 默认第二个是Gaea的excel模板定义sheet
     public static final int GAEA_DEFINE_ROW = 0; // 默认第一行是Gaea的excel模板定义
-    public static final int EXCEL_TITLE_ROW = 1; // 第二行就是一般的Excel表普通title(表示会略过, 不会当数据读取)
+    public static final int EXCEL_TITLE_ROW = 0; // 第二行就是一般的Excel表普通title(表示会略过, 不会当数据读取)
 }

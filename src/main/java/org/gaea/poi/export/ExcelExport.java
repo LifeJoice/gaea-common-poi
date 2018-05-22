@@ -13,7 +13,7 @@ import java.util.Map;
  * Created by iverson on 2016/10/26.
  */
 public interface ExcelExport {
-    File export(String excelTemplateId, List<? extends Map> data, String fileDir) throws SysInitException, ValidationFailedException, ProcessFailedException;
+    File export(String excelTemplateId, List<? extends Map> data, String fileDir, List<String> exportFieldNameList) throws SysInitException, ValidationFailedException, ProcessFailedException;
 
     File export(List<? extends Map> data, String title, Map<String, Field> fieldsMap, String fileName, String fileDir) throws ValidationFailedException, ProcessFailedException;
 }

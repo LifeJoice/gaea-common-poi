@@ -6,7 +6,6 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
@@ -34,7 +33,6 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -57,12 +55,13 @@ public class ExcelExportImpl implements ExcelExport {
      * @param excelTemplateId 导出的gaea excel模板id。一般会从缓存中读取。
      * @param data            数据。可以为空。空的话，只导出列头。
      * @param fileDir         excel文件目录。一般是本地临时目录。最后返回的是file。
+     * @param exportFieldNameList    要导出的字段。可以为空。如果为空，就是全部模板的字段。
      * @return
      * @throws SysInitException
      * @throws ValidationFailedException
      * @throws ProcessFailedException
      */
-    public File export(String excelTemplateId, List<? extends Map> data, String fileDir) throws SysInitException, ValidationFailedException, ProcessFailedException {
+    public File export(String excelTemplateId, List<? extends Map> data, String fileDir, List<String> exportFieldNameList) throws SysInitException, ValidationFailedException, ProcessFailedException {
         if (StringUtils.isEmpty(excelTemplateId)) {
             throw new IllegalArgumentException("导出的Excel Template（模板）ID不允许为空！");
         }
@@ -94,6 +93,10 @@ public class ExcelExportImpl implements ExcelExport {
         }
         // fieldMap转换为 key=name，用name做检索生成数据
         LinkedCaseInsensitiveMap keyIsNameFieldMap = GaeaPoiUtils.getNameColumnMap(fieldMap);
+        /* 获取模板和exportFieldNameList的交集 */
+        if(CollectionUtils.isNotEmpty(exportFieldNameList)) {
+            keyIsNameFieldMap = GaeaPoiUtils.getJoinFields(keyIsNameFieldMap, exportFieldNameList);
+        }
         // 从模板，获取ExcelSheet定义对象
         ExcelSheet excelSheet = ExpressParser.createSheet(excelTemplateId);
         return export(data, null, keyIsNameFieldMap, excelTemplate.getFileName(), fileDir, excelSheet);

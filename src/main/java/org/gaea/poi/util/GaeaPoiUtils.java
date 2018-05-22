@@ -1,5 +1,6 @@
 package org.gaea.poi.util;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -20,6 +21,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -179,5 +181,31 @@ public class GaeaPoiUtils {
             columnMap.put(excelField.getName(), excelField);
         }
         return columnMap;
+    }
+
+    /**
+     * 获取两个集合相交的Field。其中一个集合是完整的。另一个List，是只有key的list。
+     *
+     * @param linkFieldsMap          这是一个有序的map。而返回的map的顺序，也保持和这个一样。
+     * @param fieldsKeyList
+     * @return
+     * @throws ValidationFailedException
+     */
+    public static LinkedCaseInsensitiveMap<Field> getJoinFields(Map<String, Field> linkFieldsMap, List<String> fieldsKeyList) throws ValidationFailedException {
+        if (CollectionUtils.isEmpty(fieldsKeyList) || MapUtils.isEmpty(linkFieldsMap)) {
+            return null;
+        }
+        LinkedCaseInsensitiveMap<Field> resultMap = null;
+        resultMap = new LinkedCaseInsensitiveMap<Field>();
+        // 遍历有序的map，这样返回才能根据有序map的顺序返回
+        for (String linkKey : linkFieldsMap.keySet()) {
+            for (String key2 : fieldsKeyList) {
+                if (linkKey.equalsIgnoreCase(key2)) {
+                    resultMap.put(key2, linkFieldsMap.get(key2));
+                    break;
+                }
+            }
+        }
+        return resultMap;
     }
 }
